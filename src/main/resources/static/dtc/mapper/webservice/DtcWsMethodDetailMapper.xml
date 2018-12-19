@@ -190,9 +190,13 @@
     where ID = #{id,jdbcType=VARCHAR}
   </update>
 
-  <select id="selectById" parameterType="java.lang.String" resultMap="BaseResultMap">
+  <select id="selectWsServerDetail" parameterType="java.lang.String" resultType="java.util.HashMap">
     select
     <include refid="Base_Column_List" />
-    from DTC_WS_METHOD_DETAIL order by id
+    ,URL, NAME_SPACE, OPT_ACHV_TYPE
+    from DTC_WS_METHOD_DETAIL  t
+    left join ( select  id  ws_id, url, name_space, opt_achv_type from dtc_ws_config ) dw on t.ws_config_id = dw.ws_id
+    order by t.id
   </select>
+
 </mapper>
