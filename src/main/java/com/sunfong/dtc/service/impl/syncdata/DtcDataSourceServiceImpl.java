@@ -30,9 +30,9 @@ public class DtcDataSourceServiceImpl implements DtcDataSourceService {
     @Autowired
     SqlSessionFactory sqlSessionFactory;
 
+    @Override
     public DtcDataSource getDataSources(String id) {
         DtcDataSource dcs = dcDataSourceMapper.selectByPrimaryKey(id);
-        System.out.println(dcs);
         return dcs;
     }
 

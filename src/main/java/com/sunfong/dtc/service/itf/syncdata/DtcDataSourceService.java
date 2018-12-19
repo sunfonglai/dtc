@@ -2,11 +2,16 @@ package com.sunfong.dtc.service.itf.syncdata;
 
 
 
+import com.sunfong.dtc.dob.entity.syncdata.DtcDataSource;
+
 import java.util.List;
 
+/**
+ * @author wfr14
+ */
 public interface DtcDataSourceService {
 
-//    DcDataSourceDTO getDataSources(String id);
+    DtcDataSource getDataSources(String id);
 
     List getDataSources();
 

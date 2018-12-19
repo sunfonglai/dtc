@@ -1,18 +1,21 @@
 package com.sunfong.dtc.controller.syncdata;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.sunfong.dtc.dob.entity.syncdata.DtcCurrentTask;
-import com.sunfong.dtc.dob.entity.syncdata.DtcCurrentTaskDetail;
+
 import com.sunfong.dtc.dob.entity.syncdata.DtcDataSource;
 import com.sunfong.dtc.dob.entity.syncdata.DtcTableWhiteList;
+import com.sunfong.dtc.dob.entity.webservice.DtcWsConfig;
 import com.sunfong.dtc.service.itf.syncdata.DtcDataSourceService;
 import com.sunfong.dtc.service.itf.syncdata.DtcTableWhiteListService;
+import com.sunfong.dtc.service.itf.webservice.DtcWsConfigService;
+import com.sunfong.dtc.util.webservice.client.WebServiceCilentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,14 +26,22 @@ import java.util.Map;
 @RequestMapping(value = "/data/dtc/syncData")
 public class DtcSyncDataController {
 
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Autowired
     DtcDataSourceService dtcDataSourceService;
 
     @Autowired
+    DtcWsConfigService dtcWsConfigService;
+
+    @Autowired
     DtcTableWhiteListService dtcTableWhiteListService;
 
+    @Autowired
+    WebServiceCilentService webServiceCilentService;
+
     /**
-     * @return 获取所有同步计划
+     * @return 获取所有数据源信息
      */
     @RequestMapping(value = "/getDataSource")
 
@@ -38,18 +49,31 @@ public class DtcSyncDataController {
         return dtcDataSourceService.getDataSources();
     }
 
+    /**
+     * @return 获取所有同步计划
+     */
+    @RequestMapping(value = "/getDataSource")
 
-
+    public List getWsServer(){
+        return dtcDataSourceService.getDataSources();
+    }
 
     @RequestMapping(value = "/execSyncData")
     public Object execSyncData(String sourceId){
-        System.out.println("接收同步请求，同步源id为"+sourceId);
-        System.out.println("执行获取同步表白名单");
+        logger.debug("接收同步请求，同步源id为id:{}",sourceId);
+
+        logger.debug("执行同步服务地址");
+        DtcDataSource dts= dtcDataSourceService.getDataSources(sourceId);
+        DtcWsConfig config = new DtcWsConfig();
+        if("2".equals(dts.getGainType())){
+            config= dtcWsConfigService.getWsById(dts.getGainId());
+        }
+
+        logger.debug("执行获取同步表白名单");
         List<DtcTableWhiteList> tableList = dtcTableWhiteListService.getTablesBySourceId(sourceId);
 //        创建一个与tableList一一对应的存放处理结果 map的key为表名，value为map对象
         Map<String ,Map>tableMap = new HashMap(tableList.size());
-//
-        System.out.println("创建任务扫描");
+        logger.debug("创建任务扫描");
 //        组织查询白名单的SQL
         for (int i = 0; i < tableList.size(); i++) {
             Map<String ,String> taleResultMap  = new HashMap(16);
@@ -65,12 +89,13 @@ public class DtcSyncDataController {
         }
 
 //      方便后续采用多线程，
-        System.out.println("发送请求到源数据库,接收结果并解析");
+        logger.debug("发送请求到源数据库,接收结果并解析");
         for (Map.Entry<String, Map> entry : tableMap.entrySet()) {
             Map tableSqlMap = entry.getValue();
             String sql = tableSqlMap.get("queryTableNumSql").toString();
-            Map<String,String> requestParamsMap = new HashMap(16);
+            LinkedHashMap requestParamsMap = new LinkedHashMap();
             requestParamsMap.put("xmlStr",sql);
+            String resultStr = webServiceCilentService.invokeWs(config,"getDataBySql",requestParamsMap);
 //            String resultStr =dcRestHttpService.postHttp(requestParamsMap);
 
 //            解析json字符串
