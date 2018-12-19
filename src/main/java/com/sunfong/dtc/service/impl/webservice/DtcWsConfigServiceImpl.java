@@ -7,6 +7,9 @@ import com.sunfong.dtc.service.itf.webservice.DtcWsConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * @author wfr14
+ */
 @Service
 public class DtcWsConfigServiceImpl implements DtcWsConfigService {
 

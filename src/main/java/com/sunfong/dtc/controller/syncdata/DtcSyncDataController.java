@@ -7,6 +7,7 @@ import com.sunfong.dtc.dob.entity.webservice.DtcWsConfig;
 import com.sunfong.dtc.service.itf.syncdata.DtcDataSourceService;
 import com.sunfong.dtc.service.itf.syncdata.DtcTableWhiteListService;
 import com.sunfong.dtc.service.itf.webservice.DtcWsConfigService;
+import com.sunfong.dtc.service.itf.webservice.DtcWsService;
 import com.sunfong.dtc.util.webservice.client.WebServiceCilentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,7 @@ public class DtcSyncDataController {
     DtcDataSourceService dtcDataSourceService;
 
     @Autowired
-    DtcWsConfigService dtcWsConfigService;
+    DtcWsService dtcWsService;
 
     @Autowired
     DtcTableWhiteListService dtcTableWhiteListService;
@@ -52,10 +53,10 @@ public class DtcSyncDataController {
     /**
      * @return 获取所有同步计划
      */
-    @RequestMapping(value = "/getDataSource")
+    @RequestMapping(value = "/getWsServer")
 
     public List getWsServer(){
-        return dtcDataSourceService.getDataSources();
+        return dtcWsService.getWsDetailList();
     }
 
     @RequestMapping(value = "/execSyncData")
@@ -65,14 +66,12 @@ public class DtcSyncDataController {
         logger.debug("执行同步服务地址");
         DtcDataSource dts= dtcDataSourceService.getDataSources(sourceId);
         DtcWsConfig config = new DtcWsConfig();
-        if("2".equals(dts.getGainType())){
-            config= dtcWsConfigService.getWsById(dts.getGainId());
-        }
 
         logger.debug("执行获取同步表白名单");
         List<DtcTableWhiteList> tableList = dtcTableWhiteListService.getTablesBySourceId(sourceId);
 //        创建一个与tableList一一对应的存放处理结果 map的key为表名，value为map对象
         Map<String ,Map>tableMap = new HashMap(tableList.size());
+
         logger.debug("创建任务扫描");
 //        组织查询白名单的SQL
         for (int i = 0; i < tableList.size(); i++) {
